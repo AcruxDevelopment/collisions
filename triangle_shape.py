@@ -26,20 +26,15 @@ class TriangleShape:
         )
 
     def draw(self, surface: pygame.Surface, position: Vector2, width=0, color=(255, 0, 0)):
-        """
-        Draw the triangle.
-    
-        width=0 → filled triangle
-        width>0 → only outline with that stroke thickness
-        """
-        # Offset all points by the position
-        points = [(p.x + position.x, p.y + position.y) for p in self.points]
-
-        # Draw polygon
+        height = surface.get_height()
+        points = [
+            (p.x + position.x, p.y + position.y)
+            for p in self.points
+        ]
         pygame.draw.polygon(surface, color, points, width)
 
     def rotate_around(self, center: Vector2, angle_deg: float) -> "TriangleShape":
-        """Return a new TriangleShape rotated around a given center by angle_deg."""
+        """Return a new TriangleShape rotated around a given center by angle_deg (standard math, CCW)."""
         rad = math.radians(angle_deg)
         cos_r = math.cos(rad)
         sin_r = math.sin(rad)
@@ -47,6 +42,7 @@ class TriangleShape:
         for p in self.points:
             dx = p.x - center.x
             dy = p.y - center.y
+            # Standard math: CCW rotation
             new_x = center.x + dx * cos_r - dy * sin_r
             new_y = center.y + dx * sin_r + dy * cos_r
             new_points.append(Vector2(new_x, new_y))

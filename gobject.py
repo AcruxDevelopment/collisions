@@ -48,7 +48,7 @@ class GObject:
     @angle.setter
     def angle(self, value):
         delta_angle = value - self._angle
-        self._angle = value % 360
+        self._angle = value
         # Rotate children around this object
         for child in self.children:
             child.rotate_around(self.x, self.y, delta_angle)
@@ -65,6 +65,44 @@ class GObject:
         rad = math.radians(angle_deg)
         self.x += math.cos(rad) * distance
         self.y += math.sin(rad) * distance
+
+    def pointTo(self, target:"GObject"):
+        """
+        Rotate this object so it points toward `target`.
+        """
+        self.pointToVector(target.position())
+
+    def pointToVector(self, target:Vector2):
+        """
+        Rotate this object so it points toward `target`.
+        """
+        # vector pointing from this object to the target
+        direction = target - self.position()
+        # atan2 gives angle in radians (y first, then x)
+        angle_rad = math.atan2(direction.y, direction.x)
+        # convert to degrees for consistency with pygame
+        self.angle = math.degrees(angle_rad)
+
+    def rotate_towards(self, desired_angle, step=5):
+        """
+        Rotate this object smoothly towards a target angle using the shortest path.
+
+        :param desired_angle: target angle in degrees
+        :param step: max step (degrees per frame) towards the target
+        """
+        # Normalize both angles to [0, 360)
+        current = self.angle % 360
+        target = desired_angle % 360
+
+        # Compute shortest signed difference (-180, 180]
+        diff = (target - current + 180) % 360 - 180
+
+        # If the difference is small, snap to target
+        if abs(diff) <= step:
+            self.angle = target
+        else:
+            # Rotate by step in the shortest direction
+            self.angle = (current + step * math.copysign(1, diff)) % 360
 
     def rotate_around(self, center_x: float, center_y: float, delta_angle: float):
         """Rotate this object around a point (in degrees)."""
@@ -108,22 +146,21 @@ class GObject:
     # DRAWING
     # -----------------------------
     def drawMesh(self, surface: pygame.Surface, width=1, color=(255, 0, 0)):
-        normalizedPosition = self.position() + Vector2(surface.get_width()/2, surface.get_height()/2)
-        normalizedPosition.y = surface.get_height() - normalizedPosition.y
+        centerizedPosition = self.position() + Vector2(surface.get_width() / 2, surface.get_height() / 2)
 
         # Draw origin cross
         originSize = 10
         originStrokeSize = 2
-        tl = normalizedPosition - Vector2(-originSize, originSize)
-        tr = normalizedPosition - Vector2(originSize, originSize)
-        bl = normalizedPosition - Vector2(-originSize, -originSize)
-        br = normalizedPosition - Vector2(originSize, -originSize)
+        tl = centerizedPosition + Vector2(-originSize, -originSize)
+        tr = centerizedPosition + Vector2(originSize, -originSize)
+        bl = centerizedPosition + Vector2(-originSize, originSize)
+        br = centerizedPosition + Vector2(originSize, originSize)
         pygame.draw.line(surface, color, (tl.x, tl.y), (br.x, br.y), originStrokeSize)
         pygame.draw.line(surface, color, (tr.x, tr.y), (bl.x, bl.y), originStrokeSize)
 
         # Draw all meshes
         for m in self.mesh:
-            m.draw(surface, normalizedPosition, width, color)
+            m.draw(surface, centerizedPosition, width, color)
         # Draw children
         for child in self.children:
             child.drawMesh(surface, width, color)
