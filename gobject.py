@@ -105,15 +105,14 @@ class GObject:
             self.angle = (current + step * math.copysign(1, diff)) % 360
 
     def rotate_around(self, center_x: float, center_y: float, delta_angle: float):
-        """Rotate this object around a point (in degrees)."""
-        rad = math.radians(delta_angle)
+        rad = math.radians(delta_angle)  # Negate for CW rotation
         dx = self.x - center_x
         dy = self.y - center_y
         new_x = dx * math.cos(rad) - dy * math.sin(rad)
         new_y = dx * math.sin(rad) + dy * math.cos(rad)
         self._x = center_x + new_x
         self._y = center_y + new_y
-        self._angle = (self._angle + delta_angle) % 360
+        self._angle = (self._angle - delta_angle) % 360  # Subtract for CW
         # Rotate children recursively
         for child in self.children:
             child.rotate_around(center_x, center_y, delta_angle)
@@ -146,7 +145,8 @@ class GObject:
     # DRAWING
     # -----------------------------
     def drawMesh(self, surface: pygame.Surface, width=1, color=(255, 0, 0)):
-        centerizedPosition = self.position() + Vector2(surface.get_width() / 2, surface.get_height() / 2)
+        centerizedPosition = self.position() + Vector2(0, 0); centerizedPosition.y *= -1
+        centerizedPosition = centerizedPosition + Vector2(surface.get_width() / 2, surface.get_height() / 2)
 
         # Draw origin cross
         originSize = 10

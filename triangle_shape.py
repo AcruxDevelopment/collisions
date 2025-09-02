@@ -28,14 +28,14 @@ class TriangleShape:
     def draw(self, surface: pygame.Surface, position: Vector2, width=0, color=(255, 0, 0)):
         height = surface.get_height()
         points = [
-            (p.x + position.x, p.y + position.y)
+            (p.x + position.x, -p.y + position.y)
             for p in self.points
         ]
         pygame.draw.polygon(surface, color, points, width)
 
     def rotate_around(self, center: Vector2, angle_deg: float) -> "TriangleShape":
         """Return a new TriangleShape rotated around a given center by angle_deg (standard math, CCW)."""
-        rad = math.radians(angle_deg)
+        rad = -math.radians(angle_deg)
         cos_r = math.cos(rad)
         sin_r = math.sin(rad)
         new_points = []
