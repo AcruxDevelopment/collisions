@@ -108,18 +108,22 @@ class GObject:
     # DRAWING
     # -----------------------------
     def drawMesh(self, surface: pygame.Surface, width=1, color=(255, 0, 0)):
+        normalizedPosition = self.position() + Vector2(surface.get_width()/2, surface.get_height()/2)
+        normalizedPosition.y = surface.get_height() - normalizedPosition.y
+
         # Draw origin cross
         originSize = 10
         originStrokeSize = 2
-        tl = self.position() - Vector2(-originSize, originSize)
-        tr = self.position() - Vector2(originSize, originSize)
-        bl = self.position() - Vector2(-originSize, -originSize)
-        br = self.position() - Vector2(originSize, -originSize)
+        tl = normalizedPosition - Vector2(-originSize, originSize)
+        tr = normalizedPosition - Vector2(originSize, originSize)
+        bl = normalizedPosition - Vector2(-originSize, -originSize)
+        br = normalizedPosition - Vector2(originSize, -originSize)
         pygame.draw.line(surface, color, (tl.x, tl.y), (br.x, br.y), originStrokeSize)
         pygame.draw.line(surface, color, (tr.x, tr.y), (bl.x, bl.y), originStrokeSize)
+
         # Draw all meshes
         for m in self.mesh:
-            m.draw(surface, Vector2(self.x, self.y), width, color)
+            m.draw(surface, normalizedPosition, width, color)
         # Draw children
         for child in self.children:
             child.drawMesh(surface, width, color)
