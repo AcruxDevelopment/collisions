@@ -5,13 +5,14 @@ from typing import List, Optional
 import sat
 
 class GObject:
-    def __init__(self, x=0.0, y=0.0, angle=0.0, mesh: Optional[List] = None):
+    def __init__(self, x=0.0, y=0.0, angle=0.0, mesh: Optional[List] = None, ignoreMeshRotation=False):
         self._x = x
         self._y = y
         self._angle = angle  # degrees
         self.mesh: List = mesh if mesh else []  # list of unrotated meshes
         self.rotated_mesh: List = self.mesh.copy()      # list of rotated meshes
         self.children: List[GObject] = []
+        self.ignoreMeshRotation = ignoreMeshRotation  # if true, mesh won't rotate with angle changes
 
     # -----------------------------
     # HIERARCHY MANAGEMENT
@@ -53,7 +54,8 @@ class GObject:
         for child in self.children:
             child.rotate_around(self.x, self.y, delta_angle)
         # Rotate meshes: most geometry helpers use CCW-positive, so pass NEGATED angle
-        self.rotated_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+        if not self.ignoreMeshRotation:
+            self.rotated_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
 
 
     # -----------------------------
@@ -114,14 +116,11 @@ class GObject:
         self._y = center_y + new_y
 
         # Track angle in CW-positive
-        self._angle = (self._angle + delta_angle) % 360
+        self.angle = (self.angle + delta_angle) % 360
 
         # Rotate children recursively with the same CW-positive delta
         for child in self.children:
             child.rotate_around(center_x, center_y, delta_angle)
-
-        # Rotate meshes (likely CCW-positive math): negate the CW angle
-        self.rotated_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
 
 
 
@@ -152,7 +151,10 @@ class GObject:
     # -----------------------------
     def setMesh(self, mesh: List):
         self.mesh = mesh
-        self.rotated_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+        if not self.ignoreMeshRotation:
+            self.rotated_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+        else:
+            self.rotated_mesh = self.mesh.copy()
 
     # -----------------------------
     # DRAWING
