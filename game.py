@@ -11,6 +11,8 @@ class Game:
         self.keys = {}
         self.sounds = []
         self.tick = -1
+        self.sound_channels = {}  # {Sound: Channel}
+        self.next_channel_id = 0
 
     def key(self, code):
         key_const = getattr(pygame, f"K_{code}")
@@ -19,9 +21,22 @@ class Game:
     def queueSound(self, sound):
         self.sounds.append(sound)
 
+    def _get_channel_for_sound(self, snd: pygame.mixer.Sound) -> pygame.mixer.Channel:
+        """
+        Return the dedicated channel for this sound.  
+        If not assigned yet, auto-assign one.
+        """
+        if snd not in self.sound_channels:
+            pygame.mixer.set_num_channels(max(self.next_channel_id + 1, pygame.mixer.get_num_channels()))
+            self.sound_channels[snd] = pygame.mixer.Channel(self.next_channel_id)
+            self.next_channel_id += 1
+        return self.sound_channels[snd]
+
     def playSounds(self):
         for snd in set(self.sounds):
-            snd.play()
+            ch = self._get_channel_for_sound(snd)
+            ch.stop()      # cut off if already playing
+            ch.play(snd)   # replay fresh
         self.sounds.clear()
 
     def start(self):

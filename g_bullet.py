@@ -7,8 +7,9 @@ class Bullet(GObject):
         self.acceleration = acceleration
         self.velocity = 0
         self.maxVelocity = maxVelocity
-        self.isYellow = random.randint(0, 7) == 0
+        self.isYellow = random.randint(0, 5) == 0
         self.rotationLeft = 180
+        self.origin = Vector2(x, y)
 
     def update(self):
         self.velocity += self.acceleration

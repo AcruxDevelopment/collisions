@@ -18,7 +18,7 @@ mesh_spearBlocker = [tri.offset(Vector2(spearBlockerDistance, 0)) for tri in sha
 ]
 
 #mesh_bullet = shapes.circle(5, 15)
-mesh_bullet = [TriangleShape(Vector2(0, 15), Vector2(0, -15), Vector2(25, 0))]
+mesh_bullet = [TriangleShape(Vector2(0, 10), Vector2(0, -10), Vector2(25, 0)).offset(Vector2(-7, 0))]
 mesh_bar = shapes.rectangle(80, 20)
 mesh_box = shapes.rectangle(box_size, box_size)
 
@@ -36,6 +36,8 @@ class TestGame(Game):
         self.bullets = []
         self.spearBlockerDesiredAngle = 0
         self.mode = 'g'
+        self.spawnCooldown = 0
+        self.bot = False
 
     def start(self):
         global player
@@ -43,8 +45,11 @@ class TestGame(Game):
         global snd_hurt
         self.objects.append(player)
         player.add_child(spearBlocker)
-        snd_spearBlocked = pygame.mixer.Sound("assets/spear_blocked.wav"); snd_spearBlocked.set_volume(0.3)
-        snd_hurt = pygame.mixer.Sound("assets/hurt.wav"); snd_hurt.set_volume(0.3)
+        snd_spearBlocked = pygame.mixer.Sound("assets/spear_blocked.wav"); snd_spearBlocked.set_volume(0.5)
+        snd_hurt = pygame.mixer.Sound("assets/hurt.wav"); snd_hurt.set_volume(0.5)
+        pygame.mixer.music.load("assets/battle_theme.wav")
+        pygame.mixer.music.set_volume(0.8)
+        pygame.mixer.music.play(-1)
 
     def logic(self, dt):
         super().logic(dt)
@@ -69,6 +74,13 @@ class TestGame(Game):
             if(self.key('j')): player.x -= player_speed
             if(self.key('l')): player.x += player_speed
 
+        if self.bot and len(self.bullets) > 0:
+            bullet = self.bullets[0]
+            if bullet.origin.y > player.y + 10: self.spearBlockerDesiredAngle = 270 if not bullet.isYellow else 90
+            if bullet.origin.y < player.y - 10: self.spearBlockerDesiredAngle = 90 if not bullet.isYellow else 270
+            if bullet.origin.x > player.x + 10: self.spearBlockerDesiredAngle = 0 if not bullet.isYellow else 180
+            if bullet.origin.x < player.x - 10: self.spearBlockerDesiredAngle = 180 if not bullet.isYellow else 0
+
 
         spearBlocker.rotate_towards(self.spearBlockerDesiredAngle, 30)
 
@@ -76,9 +88,10 @@ class TestGame(Game):
             player.x = 0
             player.y = 0
         
-        bulletvel = 5 #5 #5
-        interval = 20 #20 #15
-        if self.tick % interval == 0:
+        bulletvel = 7 #5 #5
+        interval = 10 #20 #15
+        interval += random.randint(0, 20) # 30
+        if self.spawnCooldown <= 0:
             dist = 600
             poss = [Vector2(dist, 0), Vector2(-dist, 0), Vector2(0, dist), Vector2(0, -dist)]
             dirs = [180, 0, 90, -90]
@@ -89,6 +102,11 @@ class TestGame(Game):
             bullet.pointTo(player)
             self.bullets.append(bullet)
             self.objects.append(bullet)
+
+            self.spawnCooldown = interval
+            if bullet.isYellow: self.spawnCooldown = max(self.spawnCooldown, 25)
+        else:
+            self.spawnCooldown -= 1
 
         for bullet in self.bullets:
             if bullet.touches(spearBlocker):
@@ -103,7 +121,7 @@ class TestGame(Game):
                     bullet.rotate_around(0, 0, dd)
                     bullet.rotationLeft -= dd
                     bullet.pointTo(player)
-                    bullet.move_in_direction(bullet.angle, bullet.velocity)
+                    #bullet.move_in_direction(bullet.angle, bullet.velocity)
                 else:
                     bullet.update()
 
@@ -123,7 +141,7 @@ class TestGame(Game):
 
         bulletIdx = 0
         for bullet in self.bullets:
-            color = (255, 255, 255) if bulletIdx > 0 else (255, 0, 0)
+            color = (100, 100, 255) if bulletIdx > 0 else (255, 0, 0)
             color = (255 ,255, 0) if bullet.isYellow else color
             bullet.drawMesh(screen, width, color)
             bulletIdx += 1
