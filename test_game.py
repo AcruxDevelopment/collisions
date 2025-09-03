@@ -35,7 +35,7 @@ class TestGame(Game):
     def __init__(self, clock, screen):
         super().__init__(clock, screen)
         self.bullets = []
-        self.spearBlockerDesiredAngle = 0
+        self.spearBlockerDesiredAngle = -1
         self.mode = 'g'
         self.spawnCooldown = 0
         self.maxHurtTimeCooldown = 10
@@ -43,10 +43,18 @@ class TestGame(Game):
         self.bot = False
         #self.record = eval("[(Vector2(0, 600), 41), (Vector2(600, 0), 58), (Vector2(0, 600), 75), (Vector2(600, 0), 94), (Vector2(0, 600), 109), (Vector2(600, 0), 121), (Vector2(0, 600), 133), (Vector2(600, 0), 150), (Vector2(600, 0), 167), (Vector2(0, 600), 185), (Vector2(0, 600), 200), (Vector2(600, 0), 213)]")
         #self.record = [(Vector2(0, 600), 0), (Vector2(0, -600), 0), (Vector2(0, 0), 150)] + [(Vector2(0, 1000), 0), (Vector2(0, 1000), 0), (Vector2(0, 0), 150)]
-        self.record = [(Vector2(0, 600), 0), (Vector2(600, 0), 15), (Vector2(0, 600), 32), (Vector2(600, 0), 52), (Vector2(600, 0), 68), (Vector2(600, 0), 81), (Vector2(600, 0), 94), (Vector2(0, 600), 114), (Vector2(0, 600), 132), (Vector2(600, 0), 150), (Vector2(0, 600), 165)]
+        #self.record = [(Vector2(0, 600), 0), (Vector2(600, 0), 15), (Vector2(0, 600), 32), (Vector2(600, 0), 52), (Vector2(600, 0), 68), (Vector2(600, 0), 81), (Vector2(600, 0), 94), (Vector2(0, 600), 114), (Vector2(0, 600), 132), (Vector2(600, 0), 150), (Vector2(0, 600), 165)]
+        #self.record = [(Vector2(0, 600), 0), (Vector2(600, 0), 15)]
         #self.record = []
-        self.recordCopy = self.record.copy()
         self.recording = False
+        self._record = []
+        if not self.recording:
+            with open("record.txt", "r") as f:
+                self._record = eval(f.read())
+        else:
+            self._record = []
+        self.record = [(i[0], i[1]-self._record[0][1]) for i in self._record]
+        self.recordCopy = self.record.copy()
         self.useRandomPattern = False
         self.delay = 0
         self.bulletIdx = 0
@@ -62,11 +70,11 @@ class TestGame(Game):
         self.spawntick = 0
         pygame.mixer.music.load("assets/battle_theme.wav")
         pygame.mixer.music.set_volume(0.8)
-        #pygame.mixer.music.play(-1)
+        
 
     def logic(self, dt):
         super().logic(dt)
-
+            
         if(self.hurtTimeCooldown): self.hurtTimeCooldown -= 1
 
         deletingBullets = []
@@ -78,23 +86,33 @@ class TestGame(Game):
             if(self.key('d')): player.x += player_speed
             
 
+        recordedThisFrame = False
         if self.mode == 'g':
             if(self.key('w')): 
-                if self.spearBlockerDesiredAngle != 270 and self.recording:
+                if not self.prevKey('w') and self.recording:
                     self.record.append((Vector2(0, 600), self.tick))
+                    self.hurtTimeCooldown = 10
                 self.spearBlockerDesiredAngle = 270
             if(self.key('d')):
-                if self.spearBlockerDesiredAngle != 0 and self.recording:
+                if not self.prevKey('d') and self.recording:
                     self.record.append((Vector2(600, 0), self.tick))
+                    self.hurtTimeCooldown = 10
                 self.spearBlockerDesiredAngle = 0
             if(self.key('s')):
-                if self.spearBlockerDesiredAngle != 90 and self.recording:
+                if not self.prevKey('s') and self.recording:
                     self.record.append((Vector2(0, 600), self.tick))
+                    recordedThisFrame = True
+                    self.hurtTimeCooldown = 10
                 self.spearBlockerDesiredAngle = 90
             if(self.key('a')):
-                if self.spearBlockerDesiredAngle != 180 and self.recording:
+                if not self.prevKey('a') and self.recording:
                     self.record.append((Vector2(600, 0), self.tick))
+                    recordedThisFrame = True
+                    self.hurtTimeCooldown = 10
                 self.spearBlockerDesiredAngle = 180
+
+            if self.spearBlockerDesiredAngle != -1 and not pygame.mixer.music.get_busy() and self.recording:
+                pygame.mixer.music.play(-1)
 
             if(self.key('i')): player.y += player_speed
             if(self.key('k')): player.y -= player_speed
@@ -115,7 +133,7 @@ class TestGame(Game):
             player.x = 0
             player.y = 0
         
-        bulletvel = 7 #5 #5
+        bulletvel = 7 #5 #5 # 7
         interval = 10 #15 #20 #15
         interval += random.randint(0, 20) # 30
         self.spawntick += 1
@@ -136,7 +154,7 @@ class TestGame(Game):
         elif not self.useRandomPattern and len(self.record) > 0 and not self.recording:
             incomingSpear = self.record[0]
 
-            if self.spawntick - self.delay > incomingSpear[1]:
+            if self.spawntick - self.delay >= incomingSpear[1]:
                 pos = incomingSpear[0]
                 dir = 0
                 if pos.x > 0: dir = 180
@@ -145,16 +163,16 @@ class TestGame(Game):
                 if pos.y < 0: dir = -90
 
                 bullet = Bullet(pos.x, pos.y, dir, mesh_bullet, mesh_bullet_yellow, bulletvel, bulletvel)
-                bullet.isYellow = self.bulletIdx == 0 or self.bulletIdx == 3
+                #bullet.isYellow = self.bulletIdx == 0
                 #bullet.isYellow = True
                 bullet.pointTo(player)
                 self.bullets.append(bullet)
                 if bullet.isYellow:
-                    self.delay += 5
+                    #self.delay += 5
                     bullet.move_in_direction(bullet.angle, 120)
                 self.objects.append(bullet)
                 self.objects.append(bullet)
-                self.spawntick = self.delay + incomingSpear[1]
+                self.spawntick = incomingSpear[1]
                 self.bulletIdx += 1
 
                 self.record.pop(0)
@@ -163,7 +181,7 @@ class TestGame(Game):
             #toAdd = []
             for i in toAdd:
                 self.record.append(i)
-            self.spawntick = -50
+            self.spawntick = -100
             self.delay = 0
             self.bulletIdx = 0
         else:
@@ -173,10 +191,17 @@ class TestGame(Game):
             if bullet.touches(spearBlocker):
                 deletingBullets.append(bullet)
                 self.queueSound(snd_spearBlocked)
+                if not pygame.mixer.music.get_busy():
+                    pygame.mixer.music.play(-1)
+                    self.spawntick += 5
+
             elif bullet.touches(player):
                 deletingBullets.append(bullet)
                 self.queueSound(snd_hurt)
                 self.hurtTimeCooldown = self.maxHurtTimeCooldown
+                if not pygame.mixer.music.get_busy():
+                    pygame.mixer.music.play(-1)
+                    self.spawntick += 5
             else:
                 if bullet.isYellow and bullet.distance(player) < 200 and bullet.rotationLeft > 0:
                     dd = min(bullet.rotationLeft, 10)
@@ -195,6 +220,7 @@ class TestGame(Game):
         ]
 
         self.playSounds()
+        self.afterLogic()
 
     def draw(self, screen):
         global player
@@ -203,7 +229,7 @@ class TestGame(Game):
 
         bulletIdx = 0
         for bullet in self.bullets:
-            color = (100, 100, 255) if bulletIdx > 0 else (255, 0, 0)
+            color = (170, 190, 255) if bulletIdx > 0 else (255, 0, 0)
             color = (255 ,255, 0) if bullet.isYellow else color
             bullet.drawMesh(screen, width, color)
             bulletIdx += 1

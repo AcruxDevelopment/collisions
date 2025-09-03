@@ -17,6 +17,10 @@ class Game:
     def key(self, code):
         key_const = getattr(pygame, f"K_{code}")
         return self.keys[key_const]
+
+    def prevKey(self, code):
+        key_const = getattr(pygame, f"K_{code}")
+        return self.prev_keys[key_const]
     
     def queueSound(self, sound):
         self.sounds.append(sound)
@@ -46,6 +50,13 @@ class Game:
         self.keys = pygame.key.get_pressed()
         self.tick += 1
         pass
+
+    def afterLogic(self):
+        self.prev_keys = {}
+        for i in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+                  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            key_const = getattr(pygame, f"K_{i}")
+            self.prev_keys[key_const] = self.keys[key_const]
 
     def draw(self, screen):
         pass

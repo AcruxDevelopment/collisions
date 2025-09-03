@@ -64,8 +64,10 @@ def main():
     while running:
         tick()
 
-    print(game.record)
-    #sleep(2)
+    if game.recording:
+        with open("record.txt", "w") as f:
+            f.write(repr(game.record))
+        sleep(0.1)
     pygame.quit()
 
 if __name__ == "__main__":
