@@ -9,11 +9,20 @@ class Game:
         self.clock = clock
         self.screen = screen
         self.keys = {}
+        self.sounds = []
         self.tick = -1
 
     def key(self, code):
         key_const = getattr(pygame, f"K_{code}")
         return self.keys[key_const]
+    
+    def queueSound(self, sound):
+        self.sounds.append(sound)
+
+    def playSounds(self):
+        for snd in set(self.sounds):
+            snd.play()
+        self.sounds.clear()
 
     def start(self):
         pass

@@ -1,4 +1,5 @@
 from gobject import *
+import random
 
 class Bullet(GObject):
     def __init__(self, x, y, angle, mesh, acceleration, maxVelocity = 1000):
@@ -6,6 +7,8 @@ class Bullet(GObject):
         self.acceleration = acceleration
         self.velocity = 0
         self.maxVelocity = maxVelocity
+        self.isYellow = random.randint(0, 7) == 0
+        self.rotationLeft = 180
 
     def update(self):
         self.velocity += self.acceleration

@@ -34,16 +34,16 @@ class TriangleShape:
         pygame.draw.polygon(surface, color, points, width)
 
     def rotate_around(self, center: Vector2, angle_deg: float) -> "TriangleShape":
-        """Return a new TriangleShape rotated around a given center by angle_deg (standard math, CCW)."""
-        rad = -math.radians(angle_deg)
+        """Return a new TriangleShape rotated around a given center by angle_deg (standard math, CW)."""
+        rad = math.radians(angle_deg)
         cos_r = math.cos(rad)
         sin_r = math.sin(rad)
         new_points = []
         for p in self.points:
             dx = p.x - center.x
             dy = p.y - center.y
-            # Standard math: CCW rotation
-            new_x = center.x + dx * cos_r - dy * sin_r
-            new_y = center.y + dx * sin_r + dy * cos_r
+            # Standard math: CW rotation
+            new_x = center.x + dx * cos_r + dy * sin_r
+            new_y = center.y - dx * sin_r + dy * cos_r
             new_points.append(Vector2(new_x, new_y))
         return TriangleShape(*new_points)

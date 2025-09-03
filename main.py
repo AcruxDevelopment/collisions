@@ -13,6 +13,8 @@ clock:pygame.time.Clock = None
 screen:pygame.surface = None
 running:bool = True
 game:Game = None
+ticks = 0
+total_ticks = 0
 
 def gameLogic():
     pass
@@ -33,9 +35,15 @@ def tick():
     global clock
     global game
     global screen
-    systemLogic()
-    game.logic(1)
-    draw()
+    global total_ticks
+    global ticks
+
+    total_ticks += 1
+    if total_ticks % 1 == 0:
+        ticks += 1
+        systemLogic()
+        game.logic(1)
+        draw()
     clock.tick(60)
 
 def main():
@@ -45,7 +53,8 @@ def main():
     global game
 
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
+    pygame.mixer.init()
+    screen = pygame.display.set_mode((800, 800))
     clock = pygame.time.Clock()
     pygame.display.set_caption("Triangle Demo")
     game = TestGame(clock, screen)
