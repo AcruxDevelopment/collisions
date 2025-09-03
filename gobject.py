@@ -9,8 +9,8 @@ class GObject:
         self._x = x
         self._y = y
         self._angle = angle  # degrees
-        self.mesh_original: List = mesh if mesh else []  # list of unrotated meshes
-        self.mesh: List = self.mesh_original.copy()      # list of rotated meshes
+        self.mesh: List = mesh if mesh else []  # list of unrotated meshes
+        self.rotated_mesh: List = self.mesh.copy()      # list of rotated meshes
         self.children: List[GObject] = []
 
     # -----------------------------
@@ -53,7 +53,7 @@ class GObject:
         for child in self.children:
             child.rotate_around(self.x, self.y, delta_angle)
         # Rotate meshes: most geometry helpers use CCW-positive, so pass NEGATED angle
-        self.mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh_original]
+        self.rotated_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
 
 
     # -----------------------------
@@ -121,7 +121,7 @@ class GObject:
             child.rotate_around(center_x, center_y, delta_angle)
 
         # Rotate meshes (likely CCW-positive math): negate the CW angle
-        self.mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh_original]
+        self.rotated_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
 
 
 
@@ -137,10 +137,10 @@ class GObject:
         """
         Check collision using SAT with triangles offset by each object's position.
         """
-        for myTri in self.mesh:
+        for myTri in self.rotated_mesh:
             # Offset my triangle by self position
             offset_myTri = myTri.offset(self.position())
-            for theirTri in other.mesh:
+            for theirTri in other.rotated_mesh:
                 # Offset their triangle by their position
                 offset_theirTri = theirTri.offset(other.position())
                 if sat.triangles_collide(offset_myTri, offset_theirTri):
@@ -151,8 +151,8 @@ class GObject:
     # MESH
     # -----------------------------
     def setMesh(self, mesh: List):
-        self.mesh_original = mesh
-        self.mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh_original]
+        self.mesh = mesh
+        self.rotated_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
 
     # -----------------------------
     # DRAWING
@@ -173,7 +173,7 @@ class GObject:
             pygame.draw.line(surface, color, (tr.x, tr.y), (bl.x, bl.y), originStrokeSize)
 
         # Draw all meshes
-        for m in self.mesh:
+        for m in self.rotated_mesh:
             m.draw(surface, centerizedPosition, width, color)
         # Draw children
         for child in self.children:
