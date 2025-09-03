@@ -35,13 +35,13 @@ class TriangleShape:
 
     def rotate_around(self, center: Vector2, angle_deg: float) -> "TriangleShape":
         """Return a new TriangleShape rotated around a given center by angle_deg (standard math, CW)."""
-        rad = math.radians(angle_deg)
+        rad = -math.radians(angle_deg)
         cos_r = math.cos(rad)
         sin_r = math.sin(rad)
         new_points = []
         for p in self.points:
             dx = p.x - center.x
-            dy = p.y - center.y
+            dy = p.y + center.y
             # Standard math: CW rotation
             new_x = center.x + dx * cos_r + dy * sin_r
             new_y = center.y - dx * sin_r + dy * cos_r

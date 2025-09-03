@@ -18,7 +18,7 @@ mesh_spearBlocker = [tri.offset(Vector2(spearBlockerDistance, 0)) for tri in sha
 ]
 
 #mesh_bullet = shapes.circle(5, 15)
-mesh_bullet = [TriangleShape(Vector2(0, 15), Vector2(0, -15), Vector2(20, 0))]
+mesh_bullet = [TriangleShape(Vector2(0, 15), Vector2(0, -15), Vector2(25, 0))]
 mesh_bar = shapes.rectangle(80, 20)
 mesh_box = shapes.rectangle(box_size, box_size)
 
@@ -56,12 +56,18 @@ class TestGame(Game):
             if(self.key('s')): player.y -= player_speed
             if(self.key('a')): player.x -= player_speed
             if(self.key('d')): player.x += player_speed
+            
 
         if self.mode == 'g':
             if(self.key('w')): self.spearBlockerDesiredAngle = 270
             if(self.key('d')): self.spearBlockerDesiredAngle = 0
             if(self.key('s')): self.spearBlockerDesiredAngle = 90
             if(self.key('a')): self.spearBlockerDesiredAngle = 180
+
+            if(self.key('i')): player.y += player_speed
+            if(self.key('k')): player.y -= player_speed
+            if(self.key('j')): player.x -= player_speed
+            if(self.key('l')): player.x += player_speed
 
 
         spearBlocker.rotate_towards(self.spearBlockerDesiredAngle, 30)
@@ -71,11 +77,11 @@ class TestGame(Game):
             player.y = 0
         
         bulletvel = 5 #5 #5
-        interval = 15 #20 #15
+        interval = 20 #20 #15
         if self.tick % interval == 0:
             dist = 600
             poss = [Vector2(dist, 0), Vector2(-dist, 0), Vector2(0, dist), Vector2(0, -dist)]
-            dirs = [180, 0, 270, 90]
+            dirs = [180, 0, 90, -90]
             idx = random.randint(0, 3)
             pos = poss[idx]
 

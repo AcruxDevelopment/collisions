@@ -47,13 +47,14 @@ class GObject:
         return self._angle
     @angle.setter
     def angle(self, value):
-        delta_angle = value - self._angle
-        self._angle = value
-        # Rotate children around this object
+        delta_angle = (value - self._angle)
+        self._angle = value  # _angle is CW-positive now
+        # Rotate children around this object using CW-positive convention
         for child in self.children:
             child.rotate_around(self.x, self.y, delta_angle)
-        # Rotate all meshes
-        self.mesh = [m.rotate_around(Vector2(0, 0), self._angle) for m in self.mesh_original]
+        # Rotate meshes: most geometry helpers use CCW-positive, so pass NEGATED angle
+        self.mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh_original]
+
 
     # -----------------------------
     # TRANSFORMATIONS
@@ -62,9 +63,11 @@ class GObject:
         return Vector2(self.x, self.y)
 
     def move_in_direction(self, angle_deg: float, distance: float):
-        rad = math.radians(angle_deg)
+        # CW-positive: convert to CCW to use math cos/sin
+        rad = math.radians(-angle_deg)
         self.x += math.cos(rad) * distance
-        self.y += math.sin(rad) * distance
+        self.y += math.sin(rad) * distance  # y is math-up; you already flip on draw
+
 
     def pointTo(self, target:"GObject"):
         """
@@ -72,16 +75,12 @@ class GObject:
         """
         self.pointToVector(target.position())
 
-    def pointToVector(self, target:Vector2):
-        """
-        Rotate this object so it points toward `target`.
-        """
-        # vector pointing from this object to the target
+    def pointToVector(self, target: Vector2):
         direction = target - self.position()
-        # atan2 gives angle in radians (y first, then x)
-        angle_rad = math.atan2(direction.y, direction.x)
-        # convert to degrees for consistency with pygame
-        self.angle = math.degrees(angle_rad)
+        # atan2 is CCW-positive; convert to CW-positive
+        angle_cw = (-math.degrees(math.atan2(direction.y, direction.x))) % 360
+        self.angle = angle_cw
+
 
     def rotate_towards(self, desired_angle, step=5):
         """
@@ -105,19 +104,26 @@ class GObject:
             self.angle = (current + step * math.copysign(1, diff)) % 360
 
     def rotate_around(self, center_x: float, center_y: float, delta_angle: float):
-        rad = math.radians(delta_angle)  # Negate for CW rotation
+        # Make +delta_angle = clockwise by negating for the math rotation
+        rad = math.radians(-delta_angle)
         dx = self.x - center_x
         dy = self.y - center_y
         new_x = dx * math.cos(rad) - dy * math.sin(rad)
         new_y = dx * math.sin(rad) + dy * math.cos(rad)
         self._x = center_x + new_x
         self._y = center_y + new_y
-        self._angle = (self._angle - delta_angle) % 360  # Subtract for CW
-        # Rotate children recursively
+
+        # Track angle in CW-positive
+        self._angle = (self._angle + delta_angle) % 360
+
+        # Rotate children recursively with the same CW-positive delta
         for child in self.children:
             child.rotate_around(center_x, center_y, delta_angle)
-        # Rotate all meshes
-        self.mesh = [m.rotate_around(Vector2(0, 0), self._angle) for m in self.mesh_original]
+
+        # Rotate meshes (likely CCW-positive math): negate the CW angle
+        self.mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh_original]
+
+
 
     # -----------------------------
     # COLLISION / DISTANCE
