@@ -148,6 +148,13 @@ class GObject:
         return False
 
     # -----------------------------
+    # MESH
+    # -----------------------------
+    def setMesh(self, mesh: List):
+        self.mesh_original = mesh
+        self.mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh_original]
+
+    # -----------------------------
     # DRAWING
     # -----------------------------
     def drawMesh(self, surface: pygame.Surface, width=1, color=(255, 0, 0), drawOrigin=False):

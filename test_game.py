@@ -19,6 +19,7 @@ mesh_spearBlocker = [tri.offset(Vector2(spearBlockerDistance, 0)) for tri in sha
 
 #mesh_bullet = shapes.circle(5, 15)
 mesh_bullet = [TriangleShape(Vector2(0, 10), Vector2(0, -10), Vector2(25, 0)).offset(Vector2(-7, 0))]
+mesh_bullet_yellow = [tri.rotate_around(Vector2(0, 0), 180) for tri in mesh_bullet]
 mesh_bar = shapes.rectangle(80, 20)
 mesh_box = shapes.rectangle(box_size, box_size)
 
@@ -39,11 +40,16 @@ class TestGame(Game):
         self.spawnCooldown = 0
         self.maxHurtTimeCooldown = 10
         self.hurtTimeCooldown = 0
-        self.bot = True
-        self.record = eval("[(Vector2(0, 600), 41), (Vector2(600, 0), 58), (Vector2(0, 600), 75), (Vector2(600, 0), 94), (Vector2(0, 600), 109), (Vector2(600, 0), 121), (Vector2(0, 600), 133), (Vector2(600, 0), 150), (Vector2(600, 0), 167), (Vector2(0, 600), 185), (Vector2(0, 600), 200), (Vector2(600, 0), 213)]")
+        self.bot = False
+        #self.record = eval("[(Vector2(0, 600), 41), (Vector2(600, 0), 58), (Vector2(0, 600), 75), (Vector2(600, 0), 94), (Vector2(0, 600), 109), (Vector2(600, 0), 121), (Vector2(0, 600), 133), (Vector2(600, 0), 150), (Vector2(600, 0), 167), (Vector2(0, 600), 185), (Vector2(0, 600), 200), (Vector2(600, 0), 213)]")
+        #self.record = [(Vector2(0, 600), 0), (Vector2(0, -600), 0), (Vector2(0, 0), 150)] + [(Vector2(0, 1000), 0), (Vector2(0, 1000), 0), (Vector2(0, 0), 150)]
+        self.record = [(Vector2(0, 600), 0), (Vector2(600, 0), 15), (Vector2(0, 600), 32), (Vector2(600, 0), 52), (Vector2(600, 0), 68), (Vector2(600, 0), 81), (Vector2(600, 0), 94), (Vector2(0, 600), 114), (Vector2(0, 600), 132), (Vector2(600, 0), 150), (Vector2(0, 600), 165)]
+        #self.record = []
+        self.recordCopy = self.record.copy()
         self.recording = False
         self.useRandomPattern = False
         self.delay = 0
+        self.bulletIdx = 0
 
     def start(self):
         global player
@@ -53,16 +59,16 @@ class TestGame(Game):
         player.add_child(spearBlocker)
         snd_spearBlocked = pygame.mixer.Sound("assets/spear_blocked.wav"); snd_spearBlocked.set_volume(0.5)
         snd_hurt = pygame.mixer.Sound("assets/hurt.wav"); snd_hurt.set_volume(0.5)
+        self.spawntick = 0
         pygame.mixer.music.load("assets/battle_theme.wav")
         pygame.mixer.music.set_volume(0.8)
-        pygame.mixer.music.play(-1)
+        #pygame.mixer.music.play(-1)
 
     def logic(self, dt):
         super().logic(dt)
 
         if(self.hurtTimeCooldown): self.hurtTimeCooldown -= 1
 
-        soundsToPlay = []
         deletingBullets = []
 
         if self.mode != 'g':
@@ -109,9 +115,10 @@ class TestGame(Game):
             player.x = 0
             player.y = 0
         
-        bulletvel = 10 #5 #5
+        bulletvel = 7 #5 #5
         interval = 10 #15 #20 #15
         interval += random.randint(0, 20) # 30
+        self.spawntick += 1
         if self.spawnCooldown <= 0 and not self.recording and self.useRandomPattern:
             dist = 600
             poss = [Vector2(dist, 0), Vector2(-dist, 0), Vector2(0, dist), Vector2(0, -dist)]
@@ -119,7 +126,7 @@ class TestGame(Game):
             idx = random.randint(0, 3)
             pos = poss[idx]
 
-            bullet = Bullet(pos.x, pos.y, dirs[idx], mesh_bullet, bulletvel, bulletvel)
+            bullet = Bullet(pos.x, pos.y, dirs[idx], mesh_bullet, mesh_bullet_yellow, bulletvel, bulletvel)
             bullet.pointTo(player)
             self.bullets.append(bullet)
             self.objects.append(bullet)
@@ -128,12 +135,8 @@ class TestGame(Game):
             if bullet.isYellow: self.spawnCooldown = max(self.spawnCooldown, 30)
         elif not self.useRandomPattern and len(self.record) > 0 and not self.recording:
             incomingSpear = self.record[0]
-            if len(self.record) < 5:
-                toAdd = eval("[(Vector2(0, 600), 41), (Vector2(600, 0), 58), (Vector2(0, 600), 75), (Vector2(600, 0), 94), (Vector2(0, 600), 109), (Vector2(600, 0), 121), (Vector2(0, 600), 133), (Vector2(600, 0), 150), (Vector2(600, 0), 167), (Vector2(0, 600), 185), (Vector2(0, 600), 200), (Vector2(600, 0), 213)]")
-                for i in toAdd:
-                        self.record.append(i)
 
-            if self.tick - self.delay > incomingSpear[1]:
+            if self.spawntick - self.delay > incomingSpear[1]:
                 pos = incomingSpear[0]
                 dir = 0
                 if pos.x > 0: dir = 180
@@ -141,15 +144,28 @@ class TestGame(Game):
                 if pos.y > 0: dir = 90
                 if pos.y < 0: dir = -90
 
-                bullet = Bullet(pos.x, pos.y, dir, mesh_bullet, bulletvel, bulletvel)
+                bullet = Bullet(pos.x, pos.y, dir, mesh_bullet, mesh_bullet_yellow, bulletvel, bulletvel)
+                bullet.isYellow = self.bulletIdx == 0 or self.bulletIdx == 3
+                #bullet.isYellow = True
                 bullet.pointTo(player)
                 self.bullets.append(bullet)
                 if bullet.isYellow:
                     self.delay += 5
-                    bullet.move_in_direction(bullet.angle, 150)
+                    bullet.move_in_direction(bullet.angle, 120)
                 self.objects.append(bullet)
+                self.objects.append(bullet)
+                self.spawntick = self.delay + incomingSpear[1]
+                self.bulletIdx += 1
 
                 self.record.pop(0)
+        elif len(self.record) == 0 and not self.recording and not self.useRandomPattern:
+            toAdd = self.recordCopy
+            #toAdd = []
+            for i in toAdd:
+                self.record.append(i)
+            self.spawntick = -50
+            self.delay = 0
+            self.bulletIdx = 0
         else:
             self.spawnCooldown -= 1
 

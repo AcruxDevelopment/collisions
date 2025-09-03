@@ -1,3 +1,4 @@
+from time import sleep
 from sat import *
 from triangle_shape import *
 from vector import *
@@ -64,6 +65,7 @@ def main():
         tick()
 
     print(game.record)
+    #sleep(2)
     pygame.quit()
 
 if __name__ == "__main__":
