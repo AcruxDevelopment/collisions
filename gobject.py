@@ -150,19 +150,20 @@ class GObject:
     # -----------------------------
     # DRAWING
     # -----------------------------
-    def drawMesh(self, surface: pygame.Surface, width=1, color=(255, 0, 0)):
+    def drawMesh(self, surface: pygame.Surface, width=1, color=(255, 0, 0), drawOrigin=False):
         centerizedPosition = self.position() + Vector2(0, 0); centerizedPosition.y *= -1
         centerizedPosition = centerizedPosition + Vector2(surface.get_width() / 2, surface.get_height() / 2)
 
         # Draw origin cross
-        originSize = 10
-        originStrokeSize = 2
-        tl = centerizedPosition + Vector2(-originSize, -originSize)
-        tr = centerizedPosition + Vector2(originSize, -originSize)
-        bl = centerizedPosition + Vector2(-originSize, originSize)
-        br = centerizedPosition + Vector2(originSize, originSize)
-        pygame.draw.line(surface, color, (tl.x, tl.y), (br.x, br.y), originStrokeSize)
-        pygame.draw.line(surface, color, (tr.x, tr.y), (bl.x, bl.y), originStrokeSize)
+        if drawOrigin:
+            originSize = 10
+            originStrokeSize = 2
+            tl = centerizedPosition + Vector2(-originSize, -originSize)
+            tr = centerizedPosition + Vector2(originSize, -originSize)
+            bl = centerizedPosition + Vector2(-originSize, originSize)
+            br = centerizedPosition + Vector2(originSize, originSize)
+            pygame.draw.line(surface, color, (tl.x, tl.y), (br.x, br.y), originStrokeSize)
+            pygame.draw.line(surface, color, (tr.x, tr.y), (bl.x, bl.y), originStrokeSize)
 
         # Draw all meshes
         for m in self.mesh:

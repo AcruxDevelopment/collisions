@@ -37,7 +37,13 @@ class TestGame(Game):
         self.spearBlockerDesiredAngle = 0
         self.mode = 'g'
         self.spawnCooldown = 0
+        self.maxHurtTimeCooldown = 10
+        self.hurtTimeCooldown = 0
         self.bot = True
+        self.record = eval("[(Vector2(0, 600), 41), (Vector2(600, 0), 58), (Vector2(0, 600), 75), (Vector2(600, 0), 94), (Vector2(0, 600), 109), (Vector2(600, 0), 121), (Vector2(0, 600), 133), (Vector2(600, 0), 150), (Vector2(600, 0), 167), (Vector2(0, 600), 185), (Vector2(0, 600), 200), (Vector2(600, 0), 213)]")
+        self.recording = False
+        self.useRandomPattern = False
+        self.delay = 0
 
     def start(self):
         global player
@@ -53,6 +59,9 @@ class TestGame(Game):
 
     def logic(self, dt):
         super().logic(dt)
+
+        if(self.hurtTimeCooldown): self.hurtTimeCooldown -= 1
+
         soundsToPlay = []
         deletingBullets = []
 
@@ -64,10 +73,22 @@ class TestGame(Game):
             
 
         if self.mode == 'g':
-            if(self.key('w')): self.spearBlockerDesiredAngle = 270
-            if(self.key('d')): self.spearBlockerDesiredAngle = 0
-            if(self.key('s')): self.spearBlockerDesiredAngle = 90
-            if(self.key('a')): self.spearBlockerDesiredAngle = 180
+            if(self.key('w')): 
+                if self.spearBlockerDesiredAngle != 270 and self.recording:
+                    self.record.append((Vector2(0, 600), self.tick))
+                self.spearBlockerDesiredAngle = 270
+            if(self.key('d')):
+                if self.spearBlockerDesiredAngle != 0 and self.recording:
+                    self.record.append((Vector2(600, 0), self.tick))
+                self.spearBlockerDesiredAngle = 0
+            if(self.key('s')):
+                if self.spearBlockerDesiredAngle != 90 and self.recording:
+                    self.record.append((Vector2(0, 600), self.tick))
+                self.spearBlockerDesiredAngle = 90
+            if(self.key('a')):
+                if self.spearBlockerDesiredAngle != 180 and self.recording:
+                    self.record.append((Vector2(600, 0), self.tick))
+                self.spearBlockerDesiredAngle = 180
 
             if(self.key('i')): player.y += player_speed
             if(self.key('k')): player.y -= player_speed
@@ -88,10 +109,10 @@ class TestGame(Game):
             player.x = 0
             player.y = 0
         
-        bulletvel = 7 #5 #5
-        interval = 10 #20 #15
+        bulletvel = 10 #5 #5
+        interval = 10 #15 #20 #15
         interval += random.randint(0, 20) # 30
-        if self.spawnCooldown <= 0:
+        if self.spawnCooldown <= 0 and not self.recording and self.useRandomPattern:
             dist = 600
             poss = [Vector2(dist, 0), Vector2(-dist, 0), Vector2(0, dist), Vector2(0, -dist)]
             dirs = [180, 0, 90, -90]
@@ -104,7 +125,31 @@ class TestGame(Game):
             self.objects.append(bullet)
 
             self.spawnCooldown = interval
-            if bullet.isYellow: self.spawnCooldown = max(self.spawnCooldown, 25)
+            if bullet.isYellow: self.spawnCooldown = max(self.spawnCooldown, 30)
+        elif not self.useRandomPattern and len(self.record) > 0 and not self.recording:
+            incomingSpear = self.record[0]
+            if len(self.record) < 5:
+                toAdd = eval("[(Vector2(0, 600), 41), (Vector2(600, 0), 58), (Vector2(0, 600), 75), (Vector2(600, 0), 94), (Vector2(0, 600), 109), (Vector2(600, 0), 121), (Vector2(0, 600), 133), (Vector2(600, 0), 150), (Vector2(600, 0), 167), (Vector2(0, 600), 185), (Vector2(0, 600), 200), (Vector2(600, 0), 213)]")
+                for i in toAdd:
+                        self.record.append(i)
+
+            if self.tick - self.delay > incomingSpear[1]:
+                pos = incomingSpear[0]
+                dir = 0
+                if pos.x > 0: dir = 180
+                if pos.x < 0: dir = 0
+                if pos.y > 0: dir = 90
+                if pos.y < 0: dir = -90
+
+                bullet = Bullet(pos.x, pos.y, dir, mesh_bullet, bulletvel, bulletvel)
+                bullet.pointTo(player)
+                self.bullets.append(bullet)
+                if bullet.isYellow:
+                    self.delay += 5
+                    bullet.move_in_direction(bullet.angle, 150)
+                self.objects.append(bullet)
+
+                self.record.pop(0)
         else:
             self.spawnCooldown -= 1
 
@@ -115,6 +160,7 @@ class TestGame(Game):
             elif bullet.touches(player):
                 deletingBullets.append(bullet)
                 self.queueSound(snd_hurt)
+                self.hurtTimeCooldown = self.maxHurtTimeCooldown
             else:
                 if bullet.isYellow and bullet.distance(player) < 200 and bullet.rotationLeft > 0:
                     dd = min(bullet.rotationLeft, 10)
@@ -137,7 +183,7 @@ class TestGame(Game):
     def draw(self, screen):
         global player
         width = 0
-        player.drawMesh(screen, width, (0, 190, 0))
+        player.drawMesh(screen, width, (0, 190, 0) if self.hurtTimeCooldown == 0 else (0, 50, 10))
 
         bulletIdx = 0
         for bullet in self.bullets:

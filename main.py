@@ -62,6 +62,8 @@ def main():
     game.start()
     while running:
         tick()
+
+    print(game.record)
     pygame.quit()
 
 if __name__ == "__main__":
