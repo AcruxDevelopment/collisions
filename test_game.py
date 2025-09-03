@@ -37,7 +37,7 @@ class TestGame(Game):
         self.spearBlockerDesiredAngle = 0
         self.mode = 'g'
         self.spawnCooldown = 0
-        self.bot = False
+        self.bot = True
 
     def start(self):
         global player
