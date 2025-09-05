@@ -78,7 +78,7 @@ class TestGame(Game):
         super().logic(dt)
         
         #spearBlocker.scaleX = 1 + (math.sin(self.tick * 0.05)+1) * 3
-        spearBlocker.scaleX += 0.001
+        spearBlocker.scaleY += 0.005
         if(self.hurtTimeCooldown): self.hurtTimeCooldown -= 1
 
         deletingBullets = []

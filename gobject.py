@@ -11,11 +11,12 @@ class GObject:
         self._y = y
 
         self.mesh: Mesh = mesh if mesh else Mesh()  # list of unrotated meshes
+        self.transformed_mesh: Mesh = self.mesh.copy() # list of rotated meshes
+        
         self._scaleX = 1
         self._scaleY = 1
         self._angle = angle  # degrees
 
-        self.transformed_mesh: Mesh = self.mesh.copy() # list of rotated meshes
         self._meshScaleX = 1
         self._meshScaleY = 1
         self._meshAngle = angle  # degrees
@@ -26,8 +27,12 @@ class GObject:
         self.doMeshAngle = not ignoreMeshRotation
         self.worldScaling = True
 
-        self.recomputeTransformedMesh()
         self.children: List[GObject] = []
+
+        self.scaleX = self._scaleX
+        self.scaleY = self.scaleY
+        self.angle = self._angle
+        self.computeTransformedMesh()
 
     # -----------------------------
     # HIERARCHY MANAGEMENT
@@ -211,7 +216,7 @@ class GObject:
     # -----------------------------
     def setMesh(self, mesh: List):
         self.mesh = mesh
-        self.recomputeTransformedMesh()
+        self.computeTransformedMesh()
 
     def recomputeTransformedMesh(self):
         return
@@ -220,6 +225,14 @@ class GObject:
         """
         if not self.mesh or self._isTransformedMeshUpdated:
             return
+        transformed_mesh = self.mesh.copy()
+        transformed_mesh = transformed_mesh.rotate_around(Vector2(0, 0), -self._meshAngle)
+        transformed_mesh = transformed_mesh.scaleX(Vector2(0, 0), self._meshScaleX)
+        transformed_mesh = transformed_mesh.scaleY(Vector2(0, 0), self._meshScaleY)
+        self.transformed_mesh = transformed_mesh
+        self._isTransformedMeshUpdated = True
+
+    def computeTransformedMesh(self):
         transformed_mesh = self.mesh.copy()
         transformed_mesh = transformed_mesh.rotate_around(Vector2(0, 0), -self._meshAngle)
         transformed_mesh = transformed_mesh.scaleX(Vector2(0, 0), self._meshScaleX)
