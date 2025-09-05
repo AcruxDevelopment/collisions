@@ -100,13 +100,13 @@ class TestGame(Game):
                 self.spearBlockerDesiredAngle = 0
             if(self.key('s')):
                 if not self.prevKey('s') and self.recording:
-                    self.record.append((Vector2(0, 600), self.tick))
+                    self.record.append((Vector2(0, -600), self.tick))
                     recordedThisFrame = True
                     self.hurtTimeCooldown = 10
                 self.spearBlockerDesiredAngle = 90
             if(self.key('a')):
                 if not self.prevKey('a') and self.recording:
-                    self.record.append((Vector2(600, 0), self.tick))
+                    self.record.append((Vector2(-600, 0), self.tick))
                     recordedThisFrame = True
                     self.hurtTimeCooldown = 10
                 self.spearBlockerDesiredAngle = 180
@@ -136,9 +136,9 @@ class TestGame(Game):
         bulletvel = 7 #5 #5 # 7
         interval = 10 #15 #20 #15
         interval += random.randint(0, 20) # 30
+        dist = 600
         self.spawntick += 1
         if self.spawnCooldown <= 0 and not self.recording and self.useRandomPattern:
-            dist = 600
             poss = [Vector2(dist, 0), Vector2(-dist, 0), Vector2(0, dist), Vector2(0, -dist)]
             dirs = [180, 0, 90, -90]
             idx = random.randint(0, 3)
@@ -162,9 +162,11 @@ class TestGame(Game):
                 if pos.y > 0: dir = 90
                 if pos.y < 0: dir = -90
 
+                #pos = [Vector2(dist, 0), Vector2(-dist, 0), Vector2(0, dist), Vector2(0, -dist)]
+                #pos = pos[random.randint(0, 3)]
                 bullet = Bullet(pos.x, pos.y, dir, mesh_bullet, mesh_bullet_yellow, bulletvel, bulletvel)
                 #bullet.isYellow = self.bulletIdx == 0
-                #bullet.isYellow = True
+                #bullet.isYellow = False
                 bullet.pointTo(player)
                 self.bullets.append(bullet)
                 if bullet.isYellow:
