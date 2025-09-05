@@ -21,5 +21,5 @@ class Bullet(GObject):
         self.move_in_direction(self.angle, self.velocity)
         if self.tick == 0:
             self.setMesh(self.yellowMesh if self.isYellow else self.normalMesh)
-            self.ignoreMeshRotation = self.isYellow
+            self.doMeshAngle = not self.isYellow
         self.tick += 1

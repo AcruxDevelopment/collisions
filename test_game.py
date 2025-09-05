@@ -66,6 +66,7 @@ class TestGame(Game):
         global snd_hurt
         self.objects.append(player)
         player.add_child(spearBlocker)
+        self.objects.append(spearBlocker)
         snd_spearBlocked = pygame.mixer.Sound("assets/spear_blocked.wav"); snd_spearBlocked.set_volume(0.5)
         snd_hurt = pygame.mixer.Sound("assets/hurt.wav"); snd_hurt.set_volume(0.5)
         self.spawntick = 0
@@ -76,7 +77,7 @@ class TestGame(Game):
     def logic(self, dt):
         super().logic(dt)
         
-
+        spearBlocker.scaleX += 0.01
         if(self.hurtTimeCooldown): self.hurtTimeCooldown -= 1
 
         deletingBullets = []
@@ -128,8 +129,8 @@ class TestGame(Game):
             if bullet.origin.x > player.x + 10: self.spearBlockerDesiredAngle = 0 if not bullet.isYellow else 180
             if bullet.origin.x < player.x - 10: self.spearBlockerDesiredAngle = 180 if not bullet.isYellow else 0
 
-
-        spearBlocker.rotate_towards(self.spearBlockerDesiredAngle, 30)
+        if spearBlocker.angle != self.spearBlockerDesiredAngle:
+            spearBlocker.rotate_towards(self.spearBlockerDesiredAngle, 30)
 
         if self.isFamilyObjectOffScreen(player):
             player.x = 0
@@ -237,6 +238,9 @@ class TestGame(Game):
             color = (255 ,255, 0) if bullet.isYellow else color
             bullet.drawMesh(screen, width, color)
             bulletIdx += 1
+
+        for i in self.objects:
+            i.recomputeTransformedMesh()
 
         box.drawMesh(screen, 5, (0, 190, 8))
         #bar.drawMesh(screen, 2, (0, 0, 255))

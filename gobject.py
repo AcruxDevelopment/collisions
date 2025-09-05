@@ -9,13 +9,25 @@ class GObject:
     def __init__(self, x=0.0, y=0.0, angle=0.0, mesh: Optional[Mesh] = None, ignoreMeshRotation=False):
         self._x = x
         self._y = y
+
+        self.mesh: Mesh = mesh if mesh else Mesh()  # list of unrotated meshes
         self._scaleX = 1
         self._scaleY = 1
         self._angle = angle  # degrees
-        self.mesh: Mesh = mesh if mesh else Mesh()  # list of unrotated meshes
-        self.transformed_mesh: Mesh = self.mesh.copy()      # list of rotated meshes
+
+        self.transformed_mesh: Mesh = self.mesh.copy() # list of rotated meshes
+        self._meshScaleX = 1
+        self._meshScaleY = 1
+        self._meshAngle = angle  # degrees
+        self._isTransformedMeshUpdated = False
+
+        self.doMeshScaleY = True
+        self.doMeshScaleX = True
+        self.doMeshAngle = not ignoreMeshRotation
+        self.worldScaling = True
+
+        self.recomputeTransformedMesh()
         self.children: List[GObject] = []
-        self.ignoreMeshRotation = ignoreMeshRotation  # if true, mesh won't rotate with angle changes
 
     # -----------------------------
     # HIERARCHY MANAGEMENT
@@ -27,8 +39,7 @@ class GObject:
     # PROPERTIES
     # -----------------------------
     @property
-    def x(self):
-        return self._x
+    def x(self): return self._x
     @x.setter
     def x(self, value):
         dx = value - self._x
@@ -37,8 +48,7 @@ class GObject:
             child.x += dx
 
     @property
-    def y(self):
-        return self._y
+    def y(self): return self._y
     @y.setter
     def y(self, value):
         dy = value - self._y
@@ -47,22 +57,19 @@ class GObject:
             child.y += dy
 
     @property
-    def angle(self):
-        return self._angle
+    def angle(self): return self._angle
     @angle.setter
     def angle(self, value):
-        delta_angle = (value - self._angle)
-        self._angle = value  # _angle is CW-positive now
-        # Rotate children around this object using CW-positive convention
+        delta_angle = value - self._angle
+        self._angle += delta_angle
+        if self.doMeshAngle:
+            self._meshAngle += delta_angle
+            self._isTransformedMeshUpdated = False
         for child in self.children:
-            child.rotate_around(self.x, self.y, delta_angle)
-        # Rotate meshes: most geometry helpers use CCW-positive, so pass NEGATED angle
-        if not self.ignoreMeshRotation:
-            self.transformed_mesh = self.mesh.rotate_around(Vector2(0, 0), -self._angle)
+            child.angle += delta_angle
 
     @property
-    def scaleX(self):
-        return self._scaleX
+    def scaleX(self): return self._scaleX
     @scaleX.setter
     def scaleX(self, value):
         if value == 0:
@@ -71,27 +78,23 @@ class GObject:
         self._scaleX = value
         for child in self.children:
             child.scaleX *= factor
-        # Scale meshes around origin
-        self.mesh = self.mesh.scaleX(Vector2(0, 0), factor)
-        if not self.ignoreMeshRotation:
-            self.transformed_mesh = self.mesh.rotate_around(Vector2(0, 0), -self._angle)
+        if self.doMeshScaleX:
+            self._meshScaleX *= factor
+        self._isTransformedMeshUpdated = False
 
     @property
-    def scaleY(self):
-        return self._scaleY
+    def scaleY(self): return self._scaleY
     @scaleY.setter
     def scaleY(self, value):
         if value == 0:
-            raise ValueError("scaleY cannot be zero")
+            raise ValueError("scaleX cannot be zero")
         factor = value / self._scaleY
         self._scaleY = value
         for child in self.children:
             child.scaleY *= factor
-        # Scale meshes around origin
-        self.mesh = self.mesh.scaleY(Vector2(0, 0), factor)
-        if not self.ignoreMeshRotation:
-            self.transformed_mesh = self.mesh.rotate_around(Vector2(0, 0), -self._angle)
-
+        if self.doMeshScaleY:
+            self._meshScaleY *= factor
+        self._isTransformedMeshUpdated = False
 
     # -----------------------------
     # TRANSFORMATIONS
@@ -186,10 +189,20 @@ class GObject:
     # -----------------------------
     def setMesh(self, mesh: List):
         self.mesh = mesh
-        if not self.ignoreMeshRotation:
-            self.transformed_mesh = self.mesh.rotate_around(Vector2(0, 0), -self._angle)
-        else:
-            self.transformed_mesh = self.mesh.copy()
+        self.recomputeTransformedMesh()
+
+    def recomputeTransformedMesh(self):
+        """
+        Recompute the transformed mesh based on current scale and angle.
+        """
+        if not self.mesh or self._isTransformedMeshUpdated:
+            return
+        transformed_mesh = self.mesh.copy()
+        transformed_mesh = transformed_mesh.rotate_around(Vector2(0, 0), -self._meshAngle)
+        transformed_mesh = transformed_mesh.scaleX(Vector2(0, 0), self._meshScaleX)
+        transformed_mesh = transformed_mesh.scaleY(Vector2(0, 0), self._meshScaleY)
+        self.transformed_mesh = transformed_mesh
+        self._isTransformedMeshUpdated = True
 
     # -----------------------------
     # DRAWING
