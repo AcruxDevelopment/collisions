@@ -5,7 +5,7 @@ class Bullet(GObject):
     def __init__(self, x, y, angle, normalMesh, yellowMesh, acceleration, maxVelocity = 1000):
         self.isYellow = random.randint(0, 7) == 0
         super().__init__(x, y, angle, normalMesh)
-        self.rotated_mesh = normalMesh
+        self.transformed_mesh = normalMesh
         self.normalMesh = normalMesh
         self.yellowMesh = yellowMesh
         self.acceleration = acceleration

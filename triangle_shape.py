@@ -33,6 +33,26 @@ class TriangleShape:
         ]
         pygame.draw.polygon(surface, color, points, width)
 
+    def scaleX(self, center: Vector2, factor: float) -> "TriangleShape":
+        """Scale only horizontally relative to a center point."""
+        new_points = []
+        for p in self.points:
+            new_x = center.x + (p.x - center.x) * factor
+            new_points.append(Vector2(new_x, p.y))
+        return TriangleShape(*new_points)
+
+    def scaleY(self, center: Vector2, factor: float) -> "TriangleShape":
+        """Scale only vertically relative to a center point."""
+        new_points = []
+        for p in self.points:
+            new_y = center.y + (p.y - center.y) * factor
+            new_points.append(Vector2(p.x, new_y))
+        return TriangleShape(*new_points)
+
+    def scale(self, center: Vector2, factor: float) -> "TriangleShape":
+        """Uniformly scale horizontally and vertically using scaleX and scaleY."""
+        return self.scaleX(center, factor).scaleY(center, factor)
+
     def rotate_around(self, center: Vector2, angle_deg: float) -> "TriangleShape":
         """Return a new TriangleShape rotated around a given center by angle_deg (standard math, CW)."""
         rad = -math.radians(angle_deg)

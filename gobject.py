@@ -8,9 +8,11 @@ class GObject:
     def __init__(self, x=0.0, y=0.0, angle=0.0, mesh: Optional[List] = None, ignoreMeshRotation=False):
         self._x = x
         self._y = y
+        self._scaleX = 1
+        self._scaleY = 1
         self._angle = angle  # degrees
         self.mesh: List = mesh if mesh else []  # list of unrotated meshes
-        self.rotated_mesh: List = self.mesh.copy()      # list of rotated meshes
+        self.transformed_mesh: List = self.mesh.copy()      # list of rotated meshes
         self.children: List[GObject] = []
         self.ignoreMeshRotation = ignoreMeshRotation  # if true, mesh won't rotate with angle changes
 
@@ -55,7 +57,39 @@ class GObject:
             child.rotate_around(self.x, self.y, delta_angle)
         # Rotate meshes: most geometry helpers use CCW-positive, so pass NEGATED angle
         if not self.ignoreMeshRotation:
-            self.rotated_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+            self.transformed_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+
+    @property
+    def scaleX(self):
+        return self._scaleX
+    @scaleX.setter
+    def scaleX(self, value):
+        if value == 0:
+            raise ValueError("scaleX cannot be zero")
+        factor = value / self._scaleX
+        self._scaleX = value
+        for child in self.children:
+            child.scaleX *= factor
+        # Scale meshes around origin
+        self.mesh = [m.scaleX(Vector2(0, 0), factor) for m in self.mesh]
+        if not self.ignoreMeshRotation:
+            self.transformed_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+
+    @property
+    def scaleY(self):
+        return self._scaleY
+    @scaleY.setter
+    def scaleY(self, value):
+        if value == 0:
+            raise ValueError("scaleY cannot be zero")
+        factor = value / self._scaleY
+        self._scaleY = value
+        for child in self.children:
+            child.scaleY *= factor
+        # Scale meshes around origin
+        self.mesh = [m.scaleY(Vector2(0, 0), factor) for m in self.mesh]
+        if not self.ignoreMeshRotation:
+            self.transformed_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
 
 
     # -----------------------------
@@ -136,10 +170,10 @@ class GObject:
         """
         Check collision using SAT with triangles offset by each object's position.
         """
-        for myTri in self.rotated_mesh:
+        for myTri in self.transformed_mesh:
             # Offset my triangle by self position
             offset_myTri = myTri.offset(self.position())
-            for theirTri in other.rotated_mesh:
+            for theirTri in other.transformed_mesh:
                 # Offset their triangle by their position
                 offset_theirTri = theirTri.offset(other.position())
                 if sat.triangles_collide(offset_myTri, offset_theirTri):
@@ -152,9 +186,9 @@ class GObject:
     def setMesh(self, mesh: List):
         self.mesh = mesh
         if not self.ignoreMeshRotation:
-            self.rotated_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+            self.transformed_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
         else:
-            self.rotated_mesh = self.mesh.copy()
+            self.transformed_mesh = self.mesh.copy()
 
     # -----------------------------
     # DRAWING
@@ -175,7 +209,7 @@ class GObject:
             pygame.draw.line(surface, color, (tr.x, tr.y), (bl.x, bl.y), originStrokeSize)
 
         # Draw all meshes
-        for m in self.rotated_mesh:
+        for m in self.transformed_mesh:
             m.draw(surface, centerizedPosition, width, color)
         # Draw children
         for child in self.children:

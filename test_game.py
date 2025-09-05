@@ -74,7 +74,8 @@ class TestGame(Game):
 
     def logic(self, dt):
         super().logic(dt)
-            
+        
+
         if(self.hurtTimeCooldown): self.hurtTimeCooldown -= 1
 
         deletingBullets = []
