@@ -28,9 +28,13 @@ player = GObject(0, 0, 0, mesh_player)
 spearBlocker = GObject(0, 0, 0, mesh_spearBlocker)
 bar = GObject(0, 0, 0, mesh_bar)
 box = GObject(0, 0, 0, mesh_box)
-rotators = []
 
+rotators = []
 player_speed = 5
+
+mesh_testbox = shapes.rectangle(50, 50)
+testbox1 = GObject(0, 0, 0, mesh_testbox)
+testbox2 = GObject(50, 50, 0, mesh_testbox)
 
 class TestGame(Game):
     def __init__(self, clock, screen):
@@ -64,7 +68,10 @@ class TestGame(Game):
         global player
         global snd_spearBlocked
         global snd_hurt
+        self.objects.append(testbox1)
+        self.objects.append(testbox2)
         self.objects.append(player)
+        testbox1.add_child(testbox2)
         player.add_child(spearBlocker)
         self.objects.append(spearBlocker)
         snd_spearBlocked = pygame.mixer.Sound("assets/spear_blocked.wav"); snd_spearBlocked.set_volume(0.5)
@@ -78,7 +85,9 @@ class TestGame(Game):
         super().logic(dt)
         
         #spearBlocker.scaleX = 1 + (math.sin(self.tick * 0.05)+1) * 3
-        spearBlocker.scaleY += 0.005
+        player.scaleY += 0.001
+        testbox1.scaleY += 0.001
+        testbox1.scaleX += 0.001
         if(self.hurtTimeCooldown): self.hurtTimeCooldown -= 1
 
         deletingBullets = []
@@ -273,5 +282,7 @@ class TestGame(Game):
         for i in self.objects:
             i.recomputeTransformedMesh()
 
+        testbox1.drawMesh(screen, 1, (255, 0, 0))
+        testbox2.drawMesh(screen, 1, (255, 0, 0))
         box.drawMesh(screen, 5, (0, 190, 8))
         #bar.drawMesh(screen, 2, (0, 0, 255))
