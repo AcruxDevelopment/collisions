@@ -65,6 +65,7 @@ class GObject:
         if self.doMeshAngle:
             self._meshAngle += delta_angle
             self._isTransformedMeshUpdated = False
+            self.transformed_mesh = self.transformed_mesh.rotate_around(Vector2(0, 0), -delta_angle)
         for child in self.children:
             child.angle += delta_angle
 
@@ -74,12 +75,13 @@ class GObject:
     def scaleX(self, value):
         if value == 0:
             raise ValueError("scaleX cannot be zero")
-        factor = value / self._scaleX
+        ds = value - self._scaleX
         self._scaleX = value
         for child in self.children:
-            child.scaleX *= factor
+            child.scaleX += ds
         if self.doMeshScaleX:
-            self._meshScaleX *= factor
+            self._meshScaleX += ds
+            self.transformed_mesh = self.transformed_mesh.scaleX(Vector2(0, 0), 1 + ds)
         self._isTransformedMeshUpdated = False
 
     @property
@@ -88,12 +90,13 @@ class GObject:
     def scaleY(self, value):
         if value == 0:
             raise ValueError("scaleX cannot be zero")
-        factor = value / self._scaleY
+        ds = value - self.scaleY
         self._scaleY = value
         for child in self.children:
-            child.scaleY *= factor
+            child.scaleY += ds
         if self.doMeshScaleY:
-            self._meshScaleY *= factor
+            self._meshScaleY += ds
+            self.transformed_mesh = self.transformed_mesh.scaleY(Vector2(0, 0), 1 + ds)
         self._isTransformedMeshUpdated = False
 
     # -----------------------------
@@ -211,15 +214,16 @@ class GObject:
         self.recomputeTransformedMesh()
 
     def recomputeTransformedMesh(self):
+        return
         """
         Recompute the transformed mesh based on current scale and angle.
         """
         if not self.mesh or self._isTransformedMeshUpdated:
             return
         transformed_mesh = self.mesh.copy()
+        transformed_mesh = transformed_mesh.rotate_around(Vector2(0, 0), -self._meshAngle)
         transformed_mesh = transformed_mesh.scaleX(Vector2(0, 0), self._meshScaleX)
         transformed_mesh = transformed_mesh.scaleY(Vector2(0, 0), self._meshScaleY)
-        transformed_mesh = transformed_mesh.rotate_around(Vector2(0, 0), -self._meshAngle)
         self.transformed_mesh = transformed_mesh
         self._isTransformedMeshUpdated = True
 

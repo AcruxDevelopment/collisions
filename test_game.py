@@ -71,13 +71,14 @@ class TestGame(Game):
         snd_hurt = pygame.mixer.Sound("assets/hurt.wav"); snd_hurt.set_volume(0.5)
         self.spawntick = 0
         pygame.mixer.music.load("assets/battle_theme.wav")
-        pygame.mixer.music.set_volume(0.8)
+        pygame.mixer.music.set_volume(0)
         
 
     def logic(self, dt):
         super().logic(dt)
         
-        spearBlocker.scaleX += 0.01
+        #spearBlocker.scaleX = 1 + (math.sin(self.tick * 0.05)+1) * 3
+        spearBlocker.scaleX += 0.001
         if(self.hurtTimeCooldown): self.hurtTimeCooldown -= 1
 
         deletingBullets = []
@@ -103,21 +104,21 @@ class TestGame(Game):
                 if not (self.prevKey('w') or self.prevKey('d')) and self.recording:
                     self.record.append((Vector2(600, 600), self.tick))
                     self.hurtTimeCooldown = 10
-                self.spearBlockerDesiredAngle = 45  # diagonal up-right
+                self.spearBlockerDesiredAngle = -45  # diagonal up-right
 
             # Down + Left
             elif self.key('s') and self.key('a'):
                 if not (self.prevKey('s') or self.prevKey('a')) and self.recording:
                     self.record.append((Vector2(-600, -600), self.tick))
                     self.hurtTimeCooldown = 10
-                self.spearBlockerDesiredAngle = 225  # diagonal down-left
+                self.spearBlockerDesiredAngle = 90+45  # diagonal down-left
 
             # Down + Right
             elif self.key('s') and self.key('d'):
                 if not (self.prevKey('s') or self.prevKey('d')) and self.recording:
                     self.record.append((Vector2(600, -600), self.tick))
                     self.hurtTimeCooldown = 10
-                self.spearBlockerDesiredAngle = 135  # diagonal down-right
+                self.spearBlockerDesiredAngle = 45  # diagonal down-right
 
             # Single directions (original logic)
             elif self.key('w') and not self.key('a') and not self.key('d'):
