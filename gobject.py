@@ -99,6 +99,25 @@ class GObject:
     # -----------------------------
     # TRANSFORMATIONS
     # -----------------------------
+
+    def get_world_scale_factors(self):
+        # CW-positive to math angle
+        rad = math.radians(-self.angle)
+        # Compute contributions
+        fx = abs(math.cos(rad))
+        fy = abs(math.sin(rad))
+        
+        # Clamp very small values to 0
+        epsilon = 1e-10
+        if fx < epsilon:
+            fx = 0.0
+        if fy < epsilon:
+            fy = 0.0
+
+        return fx, fy
+
+
+
     def position(self) -> Vector2:
         return Vector2(self.x, self.y)
 
@@ -198,9 +217,9 @@ class GObject:
         if not self.mesh or self._isTransformedMeshUpdated:
             return
         transformed_mesh = self.mesh.copy()
-        transformed_mesh = transformed_mesh.rotate_around(Vector2(0, 0), -self._meshAngle)
         transformed_mesh = transformed_mesh.scaleX(Vector2(0, 0), self._meshScaleX)
         transformed_mesh = transformed_mesh.scaleY(Vector2(0, 0), self._meshScaleY)
+        transformed_mesh = transformed_mesh.rotate_around(Vector2(0, 0), -self._meshAngle)
         self.transformed_mesh = transformed_mesh
         self._isTransformedMeshUpdated = True
 

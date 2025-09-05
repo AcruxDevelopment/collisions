@@ -91,28 +91,58 @@ class TestGame(Game):
 
         recordedThisFrame = False
         if self.mode == 'g':
-            if(self.key('w')): 
+            # Up + Left
+            if self.key('w') and self.key('a'):
+                if not (self.prevKey('w') or self.prevKey('a')) and self.recording:
+                    self.record.append((Vector2(-600, 600), self.tick))
+                    self.hurtTimeCooldown = 10
+                self.spearBlockerDesiredAngle = -90-45  # diagonal up-left
+
+            # Up + Right
+            elif self.key('w') and self.key('d'):
+                if not (self.prevKey('w') or self.prevKey('d')) and self.recording:
+                    self.record.append((Vector2(600, 600), self.tick))
+                    self.hurtTimeCooldown = 10
+                self.spearBlockerDesiredAngle = 45  # diagonal up-right
+
+            # Down + Left
+            elif self.key('s') and self.key('a'):
+                if not (self.prevKey('s') or self.prevKey('a')) and self.recording:
+                    self.record.append((Vector2(-600, -600), self.tick))
+                    self.hurtTimeCooldown = 10
+                self.spearBlockerDesiredAngle = 225  # diagonal down-left
+
+            # Down + Right
+            elif self.key('s') and self.key('d'):
+                if not (self.prevKey('s') or self.prevKey('d')) and self.recording:
+                    self.record.append((Vector2(600, -600), self.tick))
+                    self.hurtTimeCooldown = 10
+                self.spearBlockerDesiredAngle = 135  # diagonal down-right
+
+            # Single directions (original logic)
+            elif self.key('w') and not self.key('a') and not self.key('d'):
                 if not self.prevKey('w') and self.recording:
                     self.record.append((Vector2(0, 600), self.tick))
                     self.hurtTimeCooldown = 10
-                self.spearBlockerDesiredAngle = 270
-            if(self.key('d')):
+                self.spearBlockerDesiredAngle = 270  # up
+
+            elif self.key('s') and not self.key('a') and not self.key('d'):
+                if not self.prevKey('s') and self.recording:
+                    self.record.append((Vector2(0, -600), self.tick))
+                    self.hurtTimeCooldown = 10
+                self.spearBlockerDesiredAngle = 90  # down
+
+            elif self.key('d') and not self.key('w') and not self.key('s'):
                 if not self.prevKey('d') and self.recording:
                     self.record.append((Vector2(600, 0), self.tick))
                     self.hurtTimeCooldown = 10
-                self.spearBlockerDesiredAngle = 0
-            if(self.key('s')):
-                if not self.prevKey('s') and self.recording:
-                    self.record.append((Vector2(0, -600), self.tick))
-                    recordedThisFrame = True
-                    self.hurtTimeCooldown = 10
-                self.spearBlockerDesiredAngle = 90
-            if(self.key('a')):
+                self.spearBlockerDesiredAngle = 0  # right
+
+            elif self.key('a') and not self.key('w') and not self.key('s'):
                 if not self.prevKey('a') and self.recording:
                     self.record.append((Vector2(-600, 0), self.tick))
-                    recordedThisFrame = True
                     self.hurtTimeCooldown = 10
-                self.spearBlockerDesiredAngle = 180
+                self.spearBlockerDesiredAngle = 180  # left
 
             if self.spearBlockerDesiredAngle != -1 and not pygame.mixer.music.get_busy() and self.recording:
                 pygame.mixer.music.play(-1)
