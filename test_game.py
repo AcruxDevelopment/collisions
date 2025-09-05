@@ -1,4 +1,4 @@
-from triangle_shape import *
+from triangle import *
 from vector import *
 from gobject import *
 from game import *
@@ -13,13 +13,14 @@ snd_spearBlocked = None
 snd_hurt = None
 
 mesh_player = shapes.circle(10, 20)
-mesh_spearBlocker = [tri.offset(Vector2(spearBlockerDistance, 0)) for tri in shapes.rectangle(10, 70)] + [
-    TriangleShape(Vector2(0, 0), Vector2(20, 20), Vector2(20, -20)).offset(Vector2(spearBlockerDistance, 35))
-]
+mesh_spearBlocker = Mesh(
+    [shapes.rectangle(10, 70).offset(Vector2(spearBlockerDistance, 0))] +
+    [Triangle(Vector2(0, 0), Vector2(20, 20), Vector2(20, -20)).offset(Vector2(spearBlockerDistance, 35))]
+)
 
 #mesh_bullet = shapes.circle(5, 15)
-mesh_bullet = [TriangleShape(Vector2(0, 10), Vector2(0, -10), Vector2(25, 0)).offset(Vector2(-7, 0))]
-mesh_bullet_yellow = [tri.rotate_around(Vector2(0, 0), 180) for tri in mesh_bullet]
+mesh_bullet = Mesh([Triangle(Vector2(0, 10), Vector2(0, -10), Vector2(25, 0)).offset(Vector2(-7, 0))])
+mesh_bullet_yellow = mesh_bullet.rotate_around(Vector2(0, 0), 180)
 mesh_bar = shapes.rectangle(80, 20)
 mesh_box = shapes.rectangle(box_size, box_size)
 

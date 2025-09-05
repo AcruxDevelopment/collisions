@@ -1,9 +1,10 @@
+from polygon import Polygon
 from vector import *
 import pygame
 import math
 from typing import List, Tuple
 
-class TriangleShape:
+class Triangle(Polygon):
     def __init__(self, p1: Vector2, p2: Vector2, p3: Vector2):
         self.points = [p1, p2, p3]
 
@@ -17,9 +18,9 @@ class TriangleShape:
         projections = [p.dot(axis) for p in self.points]
         return min(projections), max(projections)
 
-    def offset(self, vec: Vector2) -> "TriangleShape":
+    def offset(self, vec: Vector2) -> "Triangle":
         """Return a new triangle with all points moved by vec."""
-        return TriangleShape(
+        return Triangle(
             self.points[0] + vec,
             self.points[1] + vec,
             self.points[2] + vec
@@ -33,27 +34,27 @@ class TriangleShape:
         ]
         pygame.draw.polygon(surface, color, points, width)
 
-    def scaleX(self, center: Vector2, factor: float) -> "TriangleShape":
+    def scaleX(self, center: Vector2, factor: float) -> "Triangle":
         """Scale only horizontally relative to a center point."""
         new_points = []
         for p in self.points:
             new_x = center.x + (p.x - center.x) * factor
             new_points.append(Vector2(new_x, p.y))
-        return TriangleShape(*new_points)
+        return Triangle(*new_points)
 
-    def scaleY(self, center: Vector2, factor: float) -> "TriangleShape":
+    def scaleY(self, center: Vector2, factor: float) -> "Triangle":
         """Scale only vertically relative to a center point."""
         new_points = []
         for p in self.points:
             new_y = center.y + (p.y - center.y) * factor
             new_points.append(Vector2(p.x, new_y))
-        return TriangleShape(*new_points)
+        return Triangle(*new_points)
 
-    def scale(self, center: Vector2, factor: float) -> "TriangleShape":
+    def scale(self, center: Vector2, factor: float) -> "Triangle":
         """Uniformly scale horizontally and vertically using scaleX and scaleY."""
         return self.scaleX(center, factor).scaleY(center, factor)
 
-    def rotate_around(self, center: Vector2, angle_deg: float) -> "TriangleShape":
+    def rotate_around(self, center: Vector2, angle_deg: float) -> "Triangle":
         """Return a new TriangleShape rotated around a given center by angle_deg (standard math, CW)."""
         rad = -math.radians(angle_deg)
         cos_r = math.cos(rad)
@@ -66,4 +67,7 @@ class TriangleShape:
             new_x = center.x + dx * cos_r + dy * sin_r
             new_y = center.y - dx * sin_r + dy * cos_r
             new_points.append(Vector2(new_x, new_y))
-        return TriangleShape(*new_points)
+        return Triangle(*new_points)
+
+    def copy(self) -> "Triangle":
+        return Triangle(*[p.copy() for p in self.points])

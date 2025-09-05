@@ -1,6 +1,6 @@
 from time import sleep
 from sat import *
-from triangle_shape import *
+from triangle import *
 from vector import *
 from gobject import *
 from game import *

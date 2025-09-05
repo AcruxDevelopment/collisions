@@ -2,17 +2,18 @@ import pygame
 import math
 from vector import Vector2
 from typing import List, Optional
+from mesh import Mesh
 import sat
 
 class GObject:
-    def __init__(self, x=0.0, y=0.0, angle=0.0, mesh: Optional[List] = None, ignoreMeshRotation=False):
+    def __init__(self, x=0.0, y=0.0, angle=0.0, mesh: Optional[Mesh] = None, ignoreMeshRotation=False):
         self._x = x
         self._y = y
         self._scaleX = 1
         self._scaleY = 1
         self._angle = angle  # degrees
-        self.mesh: List = mesh if mesh else []  # list of unrotated meshes
-        self.transformed_mesh: List = self.mesh.copy()      # list of rotated meshes
+        self.mesh: Mesh = mesh if mesh else Mesh()  # list of unrotated meshes
+        self.transformed_mesh: Mesh = self.mesh.copy()      # list of rotated meshes
         self.children: List[GObject] = []
         self.ignoreMeshRotation = ignoreMeshRotation  # if true, mesh won't rotate with angle changes
 
@@ -57,7 +58,7 @@ class GObject:
             child.rotate_around(self.x, self.y, delta_angle)
         # Rotate meshes: most geometry helpers use CCW-positive, so pass NEGATED angle
         if not self.ignoreMeshRotation:
-            self.transformed_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+            self.transformed_mesh = self.mesh.rotate_around(Vector2(0, 0), -self._angle)
 
     @property
     def scaleX(self):
@@ -71,9 +72,9 @@ class GObject:
         for child in self.children:
             child.scaleX *= factor
         # Scale meshes around origin
-        self.mesh = [m.scaleX(Vector2(0, 0), factor) for m in self.mesh]
+        self.mesh = self.mesh.scaleX(Vector2(0, 0), factor)
         if not self.ignoreMeshRotation:
-            self.transformed_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+            self.transformed_mesh = self.mesh.rotate_around(Vector2(0, 0), -self._angle)
 
     @property
     def scaleY(self):
@@ -87,9 +88,9 @@ class GObject:
         for child in self.children:
             child.scaleY *= factor
         # Scale meshes around origin
-        self.mesh = [m.scaleY(Vector2(0, 0), factor) for m in self.mesh]
+        self.mesh = self.mesh.scaleY(Vector2(0, 0), factor)
         if not self.ignoreMeshRotation:
-            self.transformed_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+            self.transformed_mesh = self.mesh.rotate_around(Vector2(0, 0), -self._angle)
 
 
     # -----------------------------
@@ -186,7 +187,7 @@ class GObject:
     def setMesh(self, mesh: List):
         self.mesh = mesh
         if not self.ignoreMeshRotation:
-            self.transformed_mesh = [m.rotate_around(Vector2(0, 0), -self._angle) for m in self.mesh]
+            self.transformed_mesh = self.mesh.rotate_around(Vector2(0, 0), -self._angle)
         else:
             self.transformed_mesh = self.mesh.copy()
 
@@ -209,8 +210,7 @@ class GObject:
             pygame.draw.line(surface, color, (tr.x, tr.y), (bl.x, bl.y), originStrokeSize)
 
         # Draw all meshes
-        for m in self.transformed_mesh:
-            m.draw(surface, centerizedPosition, width, color)
+        self.transformed_mesh.draw(surface, centerizedPosition, width, color)
         # Draw children
         for child in self.children:
             child.drawMesh(surface, width, color)

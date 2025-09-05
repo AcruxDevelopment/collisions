@@ -1,6 +1,6 @@
 from typing import Tuple, List
 from vector import *
-from triangle_shape import *
+from triangle import *
 
 
 
@@ -11,7 +11,7 @@ def overlap(interval1: Tuple[float, float], interval2: Tuple[float, float]) -> b
     return not (interval1[1] < interval2[0] or interval2[1] < interval1[0])
 
 
-def triangles_collide(t1: TriangleShape, t2: TriangleShape) -> bool:
+def triangles_collide(t1: Triangle, t2: Triangle) -> bool:
     """Check if two triangles overlap using the Separating Axis Theorem."""
     edges = t1.edges() + t2.edges()
 
